@@ -25,6 +25,21 @@
         </div>
 
         <div class="top-actions">
+            <label class="language-picker" for="language">
+                <span>🌐</span>
+                <select id="language" aria-label="Language">
+                    <option value="auto">Auto</option>
+                    <option value="en">English</option>
+                    <option value="tr">Türkçe</option>
+                    <option value="it">Italiano</option>
+                    <option value="es">Español</option>
+                    <option value="pt">Português</option>
+                    <option value="ar">العربية</option>
+                    <option value="ru">Русский</option>
+                    <option value="pl">Polski</option>
+                    <option value="id">Indonesia</option>
+                </select>
+            </label>
             <button class="icon-button" id="saveBtn" title="Сохранить">💾<span>Сохранить</span></button>
             <button class="icon-button" id="photoBtn" title="Скачать PNG">📸<span>Фото</span></button>
         </div>
@@ -100,7 +115,16 @@
 
                 <section class="tab-panel" data-panel="hero">
                     <div class="section-heading"><div><span class="eyebrow">Персонаж</span><h2>Собери героя</h2></div></div>
-                    <div class="control"><label for="outfit">Костюм</label><select id="outfit"><option value="default">Маг</option><option value="noob">Roblox Noob</option><option value="knight">Рыцарь Бездны</option><option value="void">Неоновый демон</option></select></div>
+                    <div class="control"><label for="outfit">Костюм</label><select id="outfit">
+                        <option value="default">Маг</option>
+                        <option value="noob">Roblox Noob</option>
+                        <option value="knight">Рыцарь Бездны</option>
+                        <option value="void">Неоновый демон</option>
+                        <option value="cyber">Кибер-рейдер</option>
+                        <option value="royal">Золотой король</option>
+                        <option value="ninja">Теневой ниндзя</option>
+                        <option value="casual">Уличный герой</option>
+                    </select></div>
                     <div class="control"><label for="hat">Головной убор</label><select id="hat"><option value="none">Без головного убора</option><option value="wizardHat">Колпак волшебника</option><option value="horns">Демонические рога</option></select></div>
                     <div class="control"><label for="weapon">Оружие</label><select id="weapon"><option value="none">Пустые руки</option><option value="staff">Магический посох</option><option value="lightsaber">Световой меч</option><option value="sword">Рыцарский меч</option></select></div>
                     <div class="control"><label for="pose">Поза</label><select id="pose">

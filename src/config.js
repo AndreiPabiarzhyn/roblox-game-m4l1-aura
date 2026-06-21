@@ -59,7 +59,7 @@ export const randomOptions = {
     shape: ["cube", "sphere", "fire", "star"],
     direction: ["up", "down", "inward"],
     fxMode: ["smooth", "pulse", "chaos"],
-    outfit: ["default", "noob", "knight", "void"],
+    outfit: ["default", "noob", "knight", "void", "cyber", "royal", "ninja", "casual"],
     hat: ["none", "wizardHat", "horns"],
     weapon: ["none", "staff", "lightsaber", "sword"],
     pose: ["wizard", "float", "combat", "hero", "ninja", "victory", "meditate", "dance"],

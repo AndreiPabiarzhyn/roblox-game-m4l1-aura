@@ -71,6 +71,7 @@ export function createAuraScene(container) {
     const character = new THREE.Group();
     const hatGroup = new THREE.Group();
     const weaponGroup = new THREE.Group();
+    const outfitGroup = new THREE.Group();
     const petGroup = new THREE.Group();
     const auraGroup = new THREE.Group();
     const auraDecor = new THREE.Group();
@@ -98,7 +99,7 @@ export function createAuraScene(container) {
     weaponGroup.rotation.z = Math.PI;
     handAnchor.add(weaponGroup);
     rightArm.add(handAnchor);
-    character.add(head, face, torso, leftArm, rightArm, leftLeg, rightLeg, hatGroup);
+    character.add(head, face, torso, leftArm, rightArm, leftLeg, rightLeg, hatGroup, outfitGroup);
     character.position.y = -0.02;
 
     let config;
@@ -227,6 +228,7 @@ export function createAuraScene(container) {
     }
 
     function updateOutfit() {
+        clearGroup(outfitGroup);
         torsoMaterial.wireframe = false;
         [skinMaterial, torsoMaterial, pantsMaterial].forEach((material) => material.emissive.set(0x000000));
         if (config.outfit === "default") {
@@ -236,13 +238,65 @@ export function createAuraScene(container) {
         } else if (config.outfit === "knight") {
             skinMaterial.color.set(0xcbd5e1); torsoMaterial.color.set(0x4b5563); pantsMaterial.color.set(0x242b37);
             torsoMaterial.emissive.set(config.color).multiplyScalar(0.15);
-        } else {
+        } else if (config.outfit === "void") {
             skinMaterial.color.set(0x070912); torsoMaterial.color.set(0x070912); pantsMaterial.color.set(0x070912);
             skinMaterial.emissive.set(config.color).multiplyScalar(0.25);
             torsoMaterial.emissive.set(config.color).multiplyScalar(0.58);
             pantsMaterial.emissive.set(config.color).multiplyScalar(0.2);
             torsoMaterial.wireframe = true;
+        } else if (config.outfit === "cyber") {
+            skinMaterial.color.set(0xd6b08c); torsoMaterial.color.set(0x111827); pantsMaterial.color.set(0x0f172a);
+            torsoMaterial.emissive.set(config.color).multiplyScalar(0.35);
+            addChestPlate(0x1f2937, config.color);
+            addShoulders(config.color);
+        } else if (config.outfit === "royal") {
+            skinMaterial.color.set(0xffcc99); torsoMaterial.color.set(0x5b21b6); pantsMaterial.color.set(0x312e81);
+            addChestPlate(0x6d28d9, 0xfbbf24);
+            addCape(0x7f1d1d);
+        } else if (config.outfit === "ninja") {
+            skinMaterial.color.set(0xc99a78); torsoMaterial.color.set(0x111111); pantsMaterial.color.set(0x050505);
+            torsoMaterial.emissive.set(config.color).multiplyScalar(0.12);
+            addChestPlate(0x171717, config.color);
+        } else {
+            skinMaterial.color.set(0xf0c39c); torsoMaterial.color.set(0xf43f5e); pantsMaterial.color.set(0x2563eb);
+            addChestPlate(0xf8fafc, config.color, 0.58);
         }
+    }
+
+    function addChestPlate(baseColor, detailColor, scale = 0.78) {
+        const plate = new THREE.Mesh(
+            new THREE.BoxGeometry(1.65 * scale, 1.15, 0.12),
+            new THREE.MeshStandardMaterial({ color: baseColor, metalness: 0.35, roughness: 0.45 })
+        );
+        plate.position.set(0, 0.48, 0.57);
+        const detail = new THREE.Mesh(
+            new THREE.BoxGeometry(0.42, 0.42, 0.08),
+            new THREE.MeshBasicMaterial({ color: detailColor })
+        );
+        detail.position.z = 0.09;
+        plate.add(detail);
+        outfitGroup.add(plate);
+    }
+
+    function addShoulders(color) {
+        [-1.35, 1.35].forEach((x) => {
+            const shoulder = new THREE.Mesh(
+                new THREE.BoxGeometry(0.68, 0.28, 1.14),
+                new THREE.MeshStandardMaterial({ color, metalness: 0.55, roughness: 0.3 })
+            );
+            shoulder.position.set(x, 1.22, 0);
+            outfitGroup.add(shoulder);
+        });
+    }
+
+    function addCape(color) {
+        const cape = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.75, 2.3),
+            new THREE.MeshStandardMaterial({ color, side: THREE.DoubleSide, roughness: 0.9 })
+        );
+        cape.position.set(0, 0.18, -0.58);
+        cape.rotation.x = -0.08;
+        outfitGroup.add(cape);
     }
 
     function rebuildGear() {
@@ -354,7 +408,7 @@ export function createAuraScene(container) {
 
     function castMagic(kind) {
         magicKind = kind;
-        magicUntil = performance.now() + 850;
+        magicUntil = performance.now() + 1450;
         clearGroup(magicGroup);
         const material = new THREE.MeshBasicMaterial({
             color: config.color, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending
@@ -434,8 +488,8 @@ export function createAuraScene(container) {
             leftArm.rotation.z = -0.42; rightArm.rotation.z = 0.42;
         } else if (pose === "combat") {
             character.rotation.y = -0.38;
-            rightArm.rotation.set(0.2, 0, -1.65);
-            leftArm.rotation.set(0.35, 0, 0.7);
+            rightArm.rotation.set(-0.35, 0.25, -0.78);
+            leftArm.rotation.set(0.55, -0.2, 0.72);
             leftLeg.rotation.x = 0.28; rightLeg.rotation.x = -0.28;
         } else if (pose === "hero") {
             character.rotation.y = -0.18;

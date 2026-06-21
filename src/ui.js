@@ -5,7 +5,7 @@ const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 const randomChoice = (values) => values[Math.floor(Math.random() * values.length)];
 
-export function createUI(auraScene) {
+export function createUI(auraScene, i18n) {
     let toastTimer;
     let saveTimer;
     let speechTimer;
@@ -44,22 +44,20 @@ export function createUI(auraScene) {
     function updatePower() {
         const config = readConfig();
         const power = Math.min(100, Math.round(config.count / 10 + config.speed * 3 + config.glow * 0.75 + (config.fxMode === "chaos" ? 8 : 0)));
-        const ranks = power >= 90 ? ["MYTHIC", "МИФИЧЕСКАЯ АУРА"]
-            : power >= 72 ? ["LEGENDARY", "ЛЕГЕНДАРНАЯ АУРА"]
-                : power >= 50 ? ["EPIC", "ЭПИЧЕСКАЯ АУРА"]
-                    : power >= 30 ? ["RARE", "РЕДКАЯ АУРА"] : ["COMMON", "ОБЫЧНАЯ АУРА"];
+        const rankIndex = power >= 90 ? 4 : power >= 72 ? 3 : power >= 50 ? 2 : power >= 30 ? 1 : 0;
+        const rankCodes = ["COMMON", "RARE", "EPIC", "LEGENDARY", "MYTHIC"];
         $("#powerValue").textContent = power;
         $("#powerRing").style.setProperty("--power", `${power}%`);
-        $("#rankBadge").textContent = ranks[0];
-        $("#powerLabel").textContent = ranks[1];
+        $("#rankBadge").textContent = rankCodes[rankIndex];
+        $("#powerLabel").textContent = i18n.t.ranks[rankIndex];
     }
 
     function persistSoon() {
         clearTimeout(saveTimer);
-        $("#saveStatus").textContent = "Сохраняю…";
+        $("#saveStatus").textContent = i18n.t.messages.saving;
         saveTimer = setTimeout(() => {
             saveConfig(readConfig());
-            $("#saveStatus").textContent = "Сохранено локально";
+            $("#saveStatus").textContent = i18n.t.messages.saved;
         }, 250);
     }
 
@@ -89,7 +87,7 @@ export function createUI(auraScene) {
             glow: 12 + Math.floor(Math.random() * 37),
             ...Object.fromEntries(Object.entries(randomOptions).map(([key, values]) => [key, randomChoice(values)]))
         };
-        setConfig(config, heroOnly ? "Новый герой готов" : "Новая комбинация готова");
+        setConfig(config, heroOnly ? i18n.t.messages.heroReady : i18n.t.messages.comboReady);
         persistSoon();
     }
 
@@ -102,7 +100,7 @@ export function createUI(auraScene) {
         config.auraType = randomChoice(randomOptions.auraType);
         config.fxMode = randomChoice(randomOptions.fxMode);
         config.shape = randomChoice(randomOptions.shape);
-        setConfig(config, "Аура мутировала 🧬");
+        setConfig(config, i18n.t.messages.mutated);
         persistSoon();
     }
 
@@ -112,7 +110,7 @@ export function createUI(auraScene) {
         lastCastAt = now;
         const config = readConfig();
         const speech = $("#speech");
-        speech.textContent = config.spell.trim() || "СИЛА АУРЫ — ПРОБУДИСЬ!";
+        speech.textContent = config.spell.trim() || i18n.t.messages.spell;
         speech.style.display = "block";
         $("#sceneFrame").classList.remove("ultimate");
         void $("#sceneFrame").offsetWidth;
@@ -120,21 +118,31 @@ export function createUI(auraScene) {
         auraScene.castMagic(config.magicType);
         playMagicSound(config.magicType);
         clearTimeout(speechTimer);
-        speechTimer = setTimeout(() => { speech.style.display = "none"; }, 850);
+        speechTimer = setTimeout(() => { speech.style.display = "none"; }, 1400);
     }
 
     function playMagicSound(kind) {
         try {
             const audio = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audio.createOscillator();
-            const gain = audio.createGain();
-            oscillator.connect(gain); gain.connect(audio.destination);
-            oscillator.type = kind === "portal" ? "sine" : kind === "meteor" ? "square" : "sawtooth";
-            oscillator.frequency.setValueAtTime(kind === "meteor" ? 80 : 130, audio.currentTime);
-            oscillator.frequency.exponentialRampToValueAtTime(kind === "portal" ? 620 : 980, audio.currentTime + 0.38);
-            gain.gain.setValueAtTime(0.08, audio.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.42);
-            oscillator.start(); oscillator.stop(audio.currentTime + 0.42);
+            const sounds = {
+                shockwave: { type: "sine", start: 95, end: 420, duration: 0.7 },
+                lightning: { type: "sawtooth", start: 920, end: 120, duration: 0.55 },
+                portal: { type: "sine", start: 160, end: 680, duration: 0.9 },
+                meteor: { type: "triangle", start: 75, end: 42, duration: 1.05 }
+            };
+            const sound = sounds[kind] || sounds.shockwave;
+            [1, 1.015].forEach((detune, index) => {
+                const oscillator = audio.createOscillator();
+                const gain = audio.createGain();
+                oscillator.connect(gain); gain.connect(audio.destination);
+                oscillator.type = sound.type;
+                oscillator.frequency.setValueAtTime(sound.start * detune, audio.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(sound.end * detune, audio.currentTime + sound.duration);
+                gain.gain.setValueAtTime(index ? 0.018 : 0.035, audio.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + sound.duration);
+                oscillator.start(audio.currentTime + index * 0.04);
+                oscillator.stop(audio.currentTime + sound.duration);
+            });
         } catch {}
     }
 
@@ -177,15 +185,15 @@ export function createUI(auraScene) {
         $("#ultimateMobile").addEventListener("click", castMagic);
         $("#saveBtn").addEventListener("click", () => {
             saveConfig(readConfig());
-            showToast("Аура сохранена");
+            showToast(i18n.t.messages.auraSaved);
         });
         $("#photoBtn").addEventListener("click", () => {
             auraScene.downloadImage($("#auraName").value.trim());
-            showToast("Снимок сохранён");
+            showToast(i18n.t.messages.photoSaved);
         });
         $("#resetBtn").addEventListener("click", () => {
             clearConfig();
-            setConfig(defaults, "Настройки сброшены");
+            setConfig(defaults, i18n.t.messages.reset);
             auraScene.resetCamera();
         });
         $("#resetCameraBtn").addEventListener("click", auraScene.resetCamera);
@@ -199,6 +207,10 @@ export function createUI(auraScene) {
                 event.preventDefault();
                 castMagic();
             }
+        });
+        window.addEventListener("aura:languagechange", () => {
+            syncInterface();
+            $("#saveStatus").textContent = i18n.t.messages.saved;
         });
     }
 
